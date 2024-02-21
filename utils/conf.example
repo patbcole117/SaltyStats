@@ -1,0 +1,46 @@
+[DEFAULT]
+SALTYBET_URL = https://www.saltybet.com/state.json
+SLEEP = 2
+BANNER = ################################################################################################################################################################
+
+[REC]
+FFMPEG_PATH = C:\Users\pcole\Downloads\ffmpeg-2024-02-15-git-a2cfd6062c-full_build\bin\ffmpeg.exe
+ROOT_PATH = C:\Users\pcole\OneDrive\Desktop\salty
+QUALITY = 480p
+STREAM = twitch.tv/saltybet
+
+[DATABASE]
+MONGO_PASSWORD = 
+MONGO_USER = 
+MONGO_URL = 
+PROD = TRUE
+LOCALE = REMOTE
+
+[loggers]
+keys=root,saltylogger
+
+[handlers]
+keys=console
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=DEBUG
+handlers=console
+
+[logger_saltylogger]
+level=DEBUG
+handlers=console
+qualname=saltylogger
+propagate=0
+
+[handler_console]
+class=StreamHandler
+level=INFO
+formatter=simpleFormatter
+args=(sys.stdout,)
+
+[formatter_simpleFormatter]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+datefmt=%Y-%m-%d %H:%M:%S

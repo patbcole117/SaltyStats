@@ -1,0 +1,30 @@
+#!/bin/bash
+
+DIR=/home/pat/git/SaltyStats
+BANNER=####################
+
+echo "${BANNER}"
+echo "Deleting old install."
+echo "${BANNER}"
+rm -fdr ${DIR}
+
+echo "${BANNER}"
+echo "Cloning repo."
+echo "${BANNER}"
+git clone https://github.com/patbcole117/SaltyStats
+
+echo "${BANNER}"
+echo "Creating virtual environment."
+echo "${BANNER}"
+python3 -m venv ${DIR}/venv
+
+echo "${BANNER}"
+echo "Installing requirements."
+echo "${BANNER}"
+${DIR}/venv/bin/pip install -r ${DIR}/requirements.txt
+
+
+echo "${BANNER}"
+echo "Copying config."
+echo "${BANNER}"
+cp ${DIR}/../saltystat.conf ${DIR}
