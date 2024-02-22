@@ -24,14 +24,12 @@ def run():
     while True:
         time.sleep(c.sleep)
         data = requests.get(c.saltyurl)
-        c.log.debug(f'Status Code: {data.status_code}')
         if data.status_code == 200:
             bout = Bout(saltydata=json.loads(data.content))
             c.log.debug(f'bout.__dict__: {bout.__dict__}')
             status = bout.get_status()
             if status == BoutStatus.OPEN:
                 prom = format_prompt(bout)
-                print(prom)
                 for p in pmodels:
                     p.predict(prom) if not p.ready else c.log.debug(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}%')
             elif status == BoutStatus.LOCKED:
@@ -48,7 +46,7 @@ def run():
                                 p.bout, p.p1, p.p2 = bout, p1, p2
                                 #ingest_pred(p)
                                 c.log.info(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}%')
-                p.flush()
+                            p.flush()
 
 def ingest_bout(bout: Bout) -> bool:
     if  db.get_bout(bout.__dict__) is None:
