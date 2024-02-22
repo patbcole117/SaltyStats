@@ -6,19 +6,21 @@ from utils.ss_mongo import SaltyDB
 import time
 import sqlite3
 import datetime
-from gpt.salty_gpt import SaltyGPT
+from gpt.predictor import PredictorFactory
 import requests
 
 ELO_K_VALUE = 80
 
 c = Config()
 db = SaltyDB(c.db_locale, c.db_type, c.db_user, c.db_pw, c.db_url)
+pf = PredictorFactory()
 
 def main():
     run()
 
 def run():    
-    pmodels = [SaltyGPT('20240219_salty_gpt_full')]
+    #pmodels = []
+    pmodels = [pf.create_predictor('Elo', 'Elo'), pf.create_predictor('Gpt', '20240219_salty_gpt_full')]
     while True:
         time.sleep(c.sleep)
         data = requests.get(c.saltyurl)
@@ -28,8 +30,10 @@ def run():
             c.log.debug(f'bout.__dict__: {bout.__dict__}')
             status = bout.get_status()
             if status == BoutStatus.OPEN:
+                prom = format_prompt(bout)
+                print(prom)
                 for p in pmodels:
-                    p.predict(format_prompt(bout)) if not p.ready else c.log.debug(f'{p.out_dir}: {p.pred} {p.confidence*100}%')
+                    p.predict(prom) if not p.ready else c.log.debug(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}%')
             elif status == BoutStatus.LOCKED:
                 continue
             elif status == BoutStatus.UNDEFINED:   
@@ -41,9 +45,9 @@ def run():
                         c.log.info(f'New Bout! ***[ {bout.p1name} ]*** vs {bout.p2name}') if bout.get_status() == BoutStatus.RED_WIN else c.log.info(f'New Bout! {bout.p1name} vs ***[ {bout.p2name} ]***')
                         for p in pmodels:
                             if p.ready:
-                                p.bout, p.p1, p.p1 = bout, p1, p2
+                                p.bout, p.p1, p.p2 = bout, p1, p2
                                 #ingest_pred(p)
-                                c.log.info(f'{p.out_dir}: {p.pred} {(p.confidence * 100):.2f}%')
+                                c.log.info(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}%')
                 p.flush()
 
 def ingest_bout(bout: Bout) -> bool:
@@ -159,13 +163,7 @@ def format_prompt(bout: Bout):
 
     data["mode"] = bout.mode
 
-    csv = f'{data["p1name"]}'
-    for k, v in data.items():
-        if k != "p1name":
-            csv += f',{v}'
-    #print(csv)
-    csv+=','
-    return csv
+    return data
 
 '''
 BEGIN Fix streak miscalculation.
