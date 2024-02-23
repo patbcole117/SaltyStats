@@ -3,4 +3,4 @@ saltystat.log
 .venv/
 __pycache__/
 saltydbbackup.db
-gpt/20240219_salty_gpt_full/
+gpt/*_salty_gpt_*

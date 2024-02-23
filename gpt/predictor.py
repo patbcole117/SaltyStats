@@ -26,6 +26,13 @@ class Predictor(ABC):
         self.confidence = 0.0
         self.ready = False
         self.name = param
+        self.prediction_data = None
+        self.timestamp = None
+        self.is_correct = False
+
+    def determine_success(self, winner):
+        self.is_correct = self.pred == winner
+        self.prediction_data['status'] = winner
 
     @abstractmethod
     def predict(prediction_data):
@@ -37,11 +44,15 @@ class Predictor(ABC):
         self.confidence = 0.0
         self.ready = False
 
+    def __dict__(self):
+            return {'name': self.name, 'prediction': self.pred, 'confidence': self.confidence, 'is_correct': self.is_correct,  'data': self.prediction_data}
+
+
 class Gpt(Predictor):
     def __init__(self, param):
         super().__init__(param)
 
-        self.num_samples=5000
+        self.num_samples=1000
         self.temperature = 0.8
         self.max_new_tokens = 1
         self.top_k = 2
@@ -73,13 +84,15 @@ class Gpt(Predictor):
             self.decode = lambda l: ''.join([itos[i] for i in l])
         
     def predict(self, prediction_data):
+        self.prediction_data = prediction_data
+        self.timestamp = prediction_data["timestamp"]
         csv = f'{prediction_data["p1name"]}'
         for k, v in prediction_data.items():
-            if k != "p1name":
+            if k != "p1name" and k != "timestamp":
                 csv += f',{v}'
             #print(csv)
         csv+=','
-
+        
         start_ids = self.encode(csv)
         x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
         with torch.no_grad():
@@ -96,6 +109,8 @@ class Elo(Predictor):
         super().__init__(param)
     
     def predict(self, prediction_data):
+        self.prediction_data = prediction_data
+        self.timestamp = prediction_data["timestamp"]
         self.confidence = 100.00
         if prediction_data["p1elo"] > prediction_data["p2elo"]:
             self.pred = 1

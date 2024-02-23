@@ -8,7 +8,7 @@ DB_LOCALE = Enum('DB_LOCALE', ['LOCAL', 'REMOTE'])
 
 class SaltyDB:
     def __init__(self, db_locale, db_type, db_user, db_pw, db_url):
-        self.client = MongoClient(f'mongodb+srv://{db_user}:{db_pw}@{db_url}.4sgvde0.mongodb.net/?retryWrites=true&w=majority', server_api=ServerApi('1')) if db_locale == DB_LOCALE.REMOTE.name else MongoClient('mongodb://localhost:27017/', server_api=ServerApi('1'))
+        self.client = MongoClient(f'mongodb+srv://{db_user}:{db_pw}@{db_url}.4sgvde0.mongodb.net/?retryWrites=true&w=majority', server_api=ServerApi('1')) if db_locale == DB_LOCALE.REMOTE.name else MongoClient({db_url}, server_api=ServerApi('1'))
         self.db_type = db_type
         try:
             self.client.admin.command('ping')
@@ -39,6 +39,17 @@ class SaltyDB:
             return self.client.SaltyStats.fighters.find_one({"name": name})
         elif self.db_type == DB_TYPE.DEVELOPMENT.name:
             return self.client.SaltyStatsDev.fighters.find_one({"name": name})
+
+    def insert_predictor(self, predictor: dict) -> InsertOneResult:
+        try:
+            if self.db_type == DB_TYPE.PRODUCTION.name:
+                self.client.SaltyStats.predictions.insert_one(predictor)
+            elif self.db_type == DB_TYPE.DEVELOPMENT.name:
+                self.client.SaltyStatsDev.predictions.insert_one(predictor)
+            return True
+        except Exception as e:
+            print(f'MongoDB Exception!\n{e}')
+            return False
 
     def insert_bout(self, bout: dict) -> InsertOneResult:
         try:

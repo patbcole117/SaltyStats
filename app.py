@@ -6,7 +6,7 @@ from utils.ss_mongo import SaltyDB
 import time
 import sqlite3
 import datetime
-from gpt.predictor import PredictorFactory
+from gpt.predictor import PredictorFactory, Predictor
 import requests
 
 ELO_K_VALUE = 80
@@ -14,43 +14,43 @@ ELO_K_VALUE = 80
 c = Config()
 db = SaltyDB(c.db_locale, c.db_type, c.db_user, c.db_pw, c.db_url)
 pf = PredictorFactory()
+pmodels = [pf.create_predictor('Elo', 'Elo'), pf.create_predictor('Gpt', '20240223_salty_gpt_full'), pf.create_predictor('Gpt', '20240223_salty_gpt_names'), pf.create_predictor('Gpt', '20240223_salty_gpt_noelo')]
 
-def main():
-    run()
-
-def run():    
-    #pmodels = []
-    pmodels = [pf.create_predictor('Elo', 'Elo'), pf.create_predictor('Gpt', '20240219_salty_gpt_full')]
+def main():  
     while True:
         time.sleep(c.sleep)
-        data = requests.get(c.saltyurl)
-        if data.status_code == 200:
+        try:
+            data = requests.get(c.saltyurl)
+        except Exception as e:
+            c.log.error(e)
+        if data.content is not None:
             bout = Bout(saltydata=json.loads(data.content))
             c.log.debug(f'bout.__dict__: {bout.__dict__}')
             status = bout.get_status()
             if status == BoutStatus.OPEN:
                 prom = format_prompt(bout)
                 for p in pmodels:
-                    p.predict(prom) if not p.ready else c.log.debug(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}%')
+                     p.predict(prom) if not p.ready else c.log.debug(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}% {p.preds}')
             elif status == BoutStatus.LOCKED:
                 continue
             elif status == BoutStatus.UNDEFINED:   
                 continue      
             else:
                 if ingest_bout(bout):
-                    p1r, p2r, p1, p2 = ingest_fighters(bout)
+                    p1r, p2r = ingest_fighters(bout)
                     if p1r and p2r:
                         c.log.info(f'New Bout! ***[ {bout.p1name} ]*** vs {bout.p2name}') if bout.get_status() == BoutStatus.RED_WIN else c.log.info(f'New Bout! {bout.p1name} vs ***[ {bout.p2name} ]***')
                         for p in pmodels:
                             if p.ready:
-                                p.bout, p.p1, p.p2 = bout, p1, p2
-                                #ingest_pred(p)
-                                c.log.info(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}%')
+                                p.determine_success(bout.get_status().value)
+                                ingest_predictor(p)
+                                c.log.info(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}% {p.is_correct}')
                             p.flush()
 
 def ingest_bout(bout: Bout) -> bool:
     if  db.get_bout(bout.__dict__) is None:
         return db.insert_bout(bout.__dict__)
+    return False
 
 def ingest_fighters(bout: Bout):
     p1_data = db.get_fighter(name=bout.p1name)
@@ -120,8 +120,10 @@ def ingest_fighters(bout: Bout):
     else:
         c.log.error(f'p2_res: {p2_res}')
 
-    return p1_res, p2_res, p1, p2
+    return p1_res, p2_res
 
+def ingest_predictor(pred: Predictor) -> bool:
+ return db.insert_predictor(pred.__dict__())
 
 def calculate_elos(winner_elo, loser_elo) -> list[int]:
     rw = 10**(winner_elo/400)
@@ -160,6 +162,7 @@ def format_prompt(bout: Bout):
     data["p2total_bouts"]   = p2.total_bouts
 
     data["mode"] = bout.mode
+    data["timestamp"] = bout.timestamp
 
     return data
 
