@@ -4,7 +4,7 @@ SaltyStats is the third iteration of my Salty Bet analysis program. Major change
 
 ![image](https://github.com/patbcole117/SaltyStats/assets/75111838/834866bf-5f76-4c73-96e2-5999f683626d)
 
-# What is Salty Bet?
+## What is Salty Bet?
 Salty Bet is akin to a virtual version of The Ultimate Fighting Championship. At www.SaltyBet.com is a live stream of virtual, AI-controlled, fan-made characters duking it out 24/7. Thousands of spectators tune in daily to watch fights and bet fake-money, known as " salt " , on their  favorite characters. There are thousands of characters ( I have gathered stats on over 10k so far! ). 
 
 If you’re familiar with fighting games like Mortal Kombat, Street Fighter, or Tekken, Salty Bet will look quite familiar.  Salty Bet is built on the 2D fighting game engine Mugen. Released in 1999 by Elecbyte, Mugen gained notoriety by allowing players to create and import their own fighters. At some point Salty Bet's creator, Salty, saw the potential in Mugen’s community and created the website Salty Bet where the Mugen community could compare each other’s custom fighters in front of a live audience and definitively prove who is the best fighter.
@@ -45,7 +45,7 @@ The only information which needs to be added to the config is MongoDB informatio
 
 If you wish to use a local MongoDB server simply change LOCALE to LOCAL. The MONGO_URL should be the entire connection string in this case. For example: mongodb://localhost:27017/
 
-### GPTs and other Predictors
+# GPTs and other Predictors
 
 By default, the only prediction method is an Elo Ranking picker. It is NOT a GPT and simply predicts the winner based on Elo rankings. Obviously this will not work very well if you do not have a lot of matches ( 500,000+ ) since Elo takes time to become valuable. However, SaltyStats supports a framework for adding your own GPTs.
 
@@ -76,13 +76,13 @@ SaltyStats will now use your model every match to predict the outcome.
 
 You can train models many ways and run them simultaneously. I am presently using 4 models, 3 GPTs and one which simply picked based on elo.
 
-### Recording Bouts
+# Recording Bouts
 
 Simply run rec.py. There are some configuration settings you can play around with in the config. Essentially, rec.py will wait until the Bout is OPEN and begin recording until a winner is decided. Then the video will be saved to the directory specified in the config.
 
 ![image](https://github.com/patbcole117/SaltyStats/assets/75111838/fa604f8b-9f7e-4285-b7f0-b6f931441749)
 
-## Features
+# Features
 
 * Elo Ranking system for " dumb " predictions.
 
