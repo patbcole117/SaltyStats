@@ -29,9 +29,11 @@ def main():
                     thread = Thread(target=br.record, args =(lambda : stop, ))
                     thread.start()
 
-                    bout = Bout(url=c.saltyurl)
+                    data = requests.get(c.saltyurl)
+                    bout = Bout(saltydata=json.loads(data.content))
                     while (bout.get_status() is not BoutStatus.RED_WIN) and (bout.get_status() is not BoutStatus.BLUE_WIN):
-                        bout = Bout(url=c.saltyurl)
+                        data = requests.get(c.saltyurl)
+                        bout = Bout(saltydata=json.loads(data.content))
                         c.log.debug(f'RECORDING: {bout.p1name} vs {bout.p2name} -> {br.quality} :: {br.raw_path}')
                         time.sleep(1)
                     stop = True
