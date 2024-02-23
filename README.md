@@ -43,7 +43,7 @@ The only information which needs to be added to the config is MongoDB informatio
 
 ![image](https://github.com/patbcole117/SaltyStats/assets/75111838/7f549eb8-8e95-4050-9d24-7fdf14a3ca6f)
 
-If you wish to use a local MongoDB server simply change LOCALE to LOCAL. The MONGO_URL should be the entire connection string in this case. For example: mongodb://localhost:27017/
+If you wish to use a local MongoDB server simply change LOCALE from REMOTE to LOCAL. The MONGO_URL should be the entire connection string in this case. For example: mongodb://localhost:27017/
 
 # GPTs and other Predictors
 
