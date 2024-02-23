@@ -45,13 +45,6 @@ The only information which needs to be added to the config is MongoDB informatio
 
 If you wish to use a local MongoDB server simply change LOCALE to LOCAL. The MONGO_URL should be the entire connection string in this case. For example: mongodb://localhost:27017/
 
-```
-
-EXAMPLE IMAGE HERE.
-
-
-```
-
 ### GPTs and other Predictors
 
 By default, the only prediction method is an Elo Ranking picker. It is NOT a GPT and simply predicts the winner based on Elo rankings. Obviously this will not work very well if you do not have a lot of matches ( 500,000+ ) since Elo takes time to become valuable. However, SaltyStats supports a framework for adding your own GPTs.
