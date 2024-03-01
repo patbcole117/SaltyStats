@@ -21,31 +21,32 @@ def main():
         time.sleep(c.sleep)
         try:
             data = requests.get(c.saltyurl)
+            bout = Bout(saltydata=json.loads(data.content))
+            if bout is not None:
+                c.log.debug(f'bout.__dict__: {bout.__dict__}')
+                status = bout.get_status()
+                if status == BoutStatus.OPEN:
+                    prom = format_prompt(bout)
+                    for p in pmodels:
+                        p.predict(prom) if not p.ready else c.log.debug(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}% {p.preds}')
+                elif status == BoutStatus.LOCKED:
+                    continue
+                elif status == BoutStatus.UNDEFINED:   
+                    continue      
+                else:
+                    if ingest_bout(bout):
+                        p1r, p2r = ingest_fighters(bout)
+                        if p1r and p2r:
+                            c.log.info(f'New Bout! ***[ {bout.p1name} ]*** vs {bout.p2name}') if bout.get_status() == BoutStatus.RED_WIN else c.log.info(f'New Bout! {bout.p1name} vs ***[ {bout.p2name} ]***')
+                            for p in pmodels:
+                                if p.ready:
+                                    p.determine_success(bout.get_status().value)
+                                    ingest_predictor(p)
+                                    c.log.info(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}% {p.is_correct}')
+                                p.flush()
         except Exception as e:
             c.log.error(e)
-        if data.content is not None:
-            bout = Bout(saltydata=json.loads(data.content))
-            c.log.debug(f'bout.__dict__: {bout.__dict__}')
-            status = bout.get_status()
-            if status == BoutStatus.OPEN:
-                prom = format_prompt(bout)
-                for p in pmodels:
-                     p.predict(prom) if not p.ready else c.log.debug(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}% {p.preds}')
-            elif status == BoutStatus.LOCKED:
-                continue
-            elif status == BoutStatus.UNDEFINED:   
-                continue      
-            else:
-                if ingest_bout(bout):
-                    p1r, p2r = ingest_fighters(bout)
-                    if p1r and p2r:
-                        c.log.info(f'New Bout! ***[ {bout.p1name} ]*** vs {bout.p2name}') if bout.get_status() == BoutStatus.RED_WIN else c.log.info(f'New Bout! {bout.p1name} vs ***[ {bout.p2name} ]***')
-                        for p in pmodels:
-                            if p.ready:
-                                p.determine_success(bout.get_status().value)
-                                ingest_predictor(p)
-                                c.log.info(f'Prediction {p.name}: {p.pred} {(p.confidence):.2f}% {p.is_correct}')
-                            p.flush()
+        
 
 def ingest_bout(bout: Bout) -> bool:
     if  db.get_bout(bout.__dict__) is None:
